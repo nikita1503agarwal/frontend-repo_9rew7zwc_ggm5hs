@@ -1,24 +1,84 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { motion, useInView, useAnimation } from 'framer-motion'
 import { Headphones, MessageCircle, Globe2, ShieldCheck, PhoneCall, Wallet, Settings2, History, Layers3, FileText, Users2, Cpu } from 'lucide-react'
 
 const items = [
-  { icon: Cpu, title: 'Organization Deployments', desc: 'Spin up unlimited agent deployments across teams and products.', type: 'deployments' },
-  { icon: Settings2, title: 'Control Panel', desc: 'Manage intents, knowledge, routing, and channels from one place.', type: 'control' },
-  { icon: ShieldCheck, title: 'Advanced Login & Verification', desc: 'SSO/OAuth, role-based access, org-wide permissions.', type: 'login' },
-  { icon: Globe2, title: 'Multi‑Lingual', desc: 'Serve users in 100+ locales with automatic detection.', type: 'globe' },
-  { icon: MessageCircle, title: 'Website & WhatsApp', desc: 'Drop-in widgets and WhatsApp integration with concurrency.', type: 'chat' },
-  { icon: Headphones, title: 'Voice Calls', desc: 'Natural voice calls with escalation to humans and CRM add-on.', type: 'voice' },
-  { icon: FileText, title: 'Advanced File Handling', desc: 'Ingest PDFs, docs, CSVs. 10M characters knowledge base.', type: 'files' },
-  { icon: History, title: 'Conversation History', desc: 'Text and voice logs preserved per agreement window.', type: 'history' },
-  { icon: Wallet, title: 'Flexible Billing', desc: 'Usage-based with add-ons like dedicated numbers.', type: 'billing' },
-  { icon: Layers3, title: 'Themes & UI Sizes', desc: 'Right corner, center, or full screen. Choose agent theme.', type: 'themes' },
-  { icon: Users2, title: 'Training & Onboarding', desc: 'White-glove one-time setup and ongoing priority support.', type: 'training' },
-  { icon: PhoneCall, title: 'Concurrent Calls', desc: 'Scale voice concurrency for peak moments without drops.', type: 'concurrency' },
+  {
+    icon: Cpu,
+    title: 'Organization Deployments',
+    desc: 'Launch unlimited AI agents across products, teams, and markets. Define environments (dev/stage/prod), inherit shared knowledge, and promote configurations with change history and rollback.',
+    type: 'deployments',
+  },
+  {
+    icon: Settings2,
+    title: 'Control Panel',
+    desc: 'Operate everything from one command center: intents, flows, knowledge sources, channel routing, analytics, error tracing, and A/B experiments with safe guards.',
+    type: 'control',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Advanced Login & Verification',
+    desc: 'Offer SSO/OAuth, email passkeys, and role-based access. Enforce org policies, audit trails, and granular permissions down to deployment and dataset levels.',
+    type: 'login',
+  },
+  {
+    icon: Globe2,
+    title: 'Multi‑Lingual',
+    desc: 'Serve users in 100+ locales with automatic detection, locale-specific prompts, voice models, and fallbacks. Tune tone and formality per region.',
+    type: 'globe',
+  },
+  {
+    icon: MessageCircle,
+    title: 'Website & WhatsApp',
+    desc: 'Embed a website widget in minutes and connect WhatsApp Business. Route high-traffic chats with concurrency controls and SLA-based escalation.',
+    type: 'chat',
+  },
+  {
+    icon: Headphones,
+    title: 'Voice Calls',
+    desc: 'Spin up natural, low-latency voice agents with IVR replacement, CRM lookups, and human handoff. Add a dedicated number and tune behavior by queue.',
+    type: 'voice',
+  },
+  {
+    icon: FileText,
+    title: 'Advanced File Handling',
+    desc: 'Ingest PDFs, docs, spreadsheets, and URLs. Chunk, embed, and version your knowledge base up to 10M characters with per-source access controls.',
+    type: 'files',
+  },
+  {
+    icon: History,
+    title: 'Conversation History',
+    desc: 'Persist text and voice transcripts with redaction, export, and retention windows. Search across sessions and replay voice streams for QA.',
+    type: 'history',
+  },
+  {
+    icon: Wallet,
+    title: 'Flexible Billing',
+    desc: 'Simple usage-based pricing with add-ons like dedicated numbers and premium voices. Spend alerts, cost breakdowns, and caps to stay in control.',
+    type: 'billing',
+  },
+  {
+    icon: Layers3,
+    title: 'Themes & UI Sizes',
+    desc: 'Match your brand with themes, typography, and avatar styles. Choose right-corner, centered modal, or full-screen experiences with responsive layouts.',
+    type: 'themes',
+  },
+  {
+    icon: Users2,
+    title: 'Training & Onboarding',
+    desc: 'A guided 3‑minute setup, then white‑glove onboarding. We help map intents, connect data, and institute review loops for quality and compliance.',
+    type: 'training',
+  },
+  {
+    icon: PhoneCall,
+    title: 'Concurrent Calls',
+    desc: 'Scale to peak demand without drops. Smart rate limits, queueing, and parallel voice sessions keep performance smooth under heavy load.',
+    type: 'concurrency',
+  },
 ]
 
-function RowAnimation({ type }) {
-  // Futuristic mini-visuals using animated SVGs; no extra deps beyond framer-motion
+function RowAnimation({ type, focused }) {
+  // Futuristic mini-visuals using animated SVGs; intensity increases when focused
   const common = {
     initial: { opacity: 0, y: 12 },
     whileInView: { opacity: 1, y: 0 },
@@ -27,8 +87,8 @@ function RowAnimation({ type }) {
   }
 
   const stroke = 'rgba(255,255,255,0.6)'
-  const glow = 'rgba(168,85,247,0.6)'
-  const accent = 'rgba(251,191,36,0.8)'
+  const glow = focused ? 'rgba(168,85,247,0.95)' : 'rgba(168,85,247,0.6)'
+  const accent = focused ? 'rgba(251,191,36,1)' : 'rgba(251,191,36,0.8)'
 
   switch (type) {
     case 'deployments':
@@ -36,7 +96,7 @@ function RowAnimation({ type }) {
         <motion.svg {...common} viewBox="0 0 300 120" className="h-28 w-full">
           <defs>
             <radialGradient id="g1" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(139,92,246,0.5)" />
+              <stop offset="0%" stopColor="rgba(139,92,246,0.55)" />
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
           </defs>
@@ -200,27 +260,54 @@ function RowAnimation({ type }) {
   }
 }
 
-function FeatureRow({ icon: Icon, title, desc, type, index }) {
+function FeatureRow({ icon: Icon, title, desc, type, index, focused, landed, onMountRef }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { margin: '-40% 0px -40% 0px' })
+
+  useEffect(() => {
+    if (onMountRef) onMountRef(index, ref)
+  }, [index, onMountRef])
+
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5 }}
-      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
+      className={`group relative overflow-hidden rounded-3xl border bg-white/5 p-6 md:p-8 backdrop-blur ${focused ? 'border-purple-400/40 ring-1 ring-purple-400/30' : 'border-white/10'} min-h-[240px] md:min-h-[280px]`}
     >
-      <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:gap-8">
-        <div className="flex min-w-0 flex-1 items-start gap-4">
-          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-500/30 to-amber-400/30 ring-1 ring-white/10">
-            <Icon className="h-6 w-6 text-white" />
-          </div>
+      {/* Absorb pulse when mascot lands */}
+      {landed && (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full"
+          initial={{ scale: 0.6, opacity: 0.7 }}
+          animate={{ scale: [0.6, 2.2, 3.6], opacity: [0.7, 0.4, 0] }}
+          transition={{ duration: 1 }}
+          style={{
+            background: 'radial-gradient(circle at center, rgba(168,85,247,0.6), transparent 60%)',
+            filter: 'blur(4px)'
+          }}
+        />
+      )}
+
+      <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:gap-10">
+        <div className="flex min-w-0 flex-1 items-start gap-5">
+          <motion.div
+            animate={{ scale: focused ? 1.06 : 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500/30 to-amber-400/30 ring-1 ring-white/10"
+          >
+            <Icon className="h-7 w-7 text-white" />
+          </motion.div>
           <div>
-            <h3 className="text-lg font-semibold leading-tight">{title}</h3>
-            <p className="mt-1 text-sm text-white/70">{desc}</p>
+            <h3 className="text-xl font-semibold leading-tight md:text-2xl">{title}</h3>
+            <p className="mt-2 text-sm text-white/75 md:text-base">{desc}</p>
           </div>
         </div>
         <div className="relative mt-3 w-full md:mt-0 md:w-1/2">
-          <RowAnimation type={type} />
+          <RowAnimation type={type} focused={focused} />
         </div>
       </div>
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden>
@@ -231,18 +318,145 @@ function FeatureRow({ icon: Icon, title, desc, type, index }) {
 }
 
 export default function Features() {
+  const sectionRef = useRef(null)
+  const rowRefs = useRef([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [indicatorY, setIndicatorY] = useState(0)
+  const [mascotPos, setMascotPos] = useState({ x: 0, y: 0 })
+  const [landedIndex, setLandedIndex] = useState(-1)
+  const mascotControls = useAnimation()
+
+  const setRefAtIndex = (index, ref) => {
+    rowRefs.current[index] = ref
+  }
+
+  // Observe which row is most centered in viewport
+  useEffect(() => {
+    const observers = []
+    rowRefs.current.forEach((r, idx) => {
+      if (!r?.current) return
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveIndex((prev) => (idx !== prev ? idx : prev))
+            }
+          })
+        },
+        { root: null, rootMargin: '-40% 0px -40% 0px', threshold: 0 }
+      )
+      observer.observe(r.current)
+      observers.push(observer)
+    })
+    return () => observers.forEach((o) => o.disconnect())
+  }, [])
+
+  // Update indicator position
+  const updatePositions = () => {
+    const sec = sectionRef.current
+    const activeRef = rowRefs.current[activeIndex]?.current
+    if (!sec || !activeRef) return
+    const secRect = sec.getBoundingClientRect()
+    const rowRect = activeRef.getBoundingClientRect()
+    const y = rowRect.top - secRect.top + rowRect.height / 2
+    setIndicatorY(y)
+
+    // Mascot target slightly left of card content (near icon)
+    const x = 26 // left gutter offset for mascot
+    setMascotPos({ x, y })
+  }
+
+  useEffect(() => {
+    updatePositions()
+    const onScroll = () => updatePositions()
+    const onResize = () => updatePositions()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [activeIndex])
+
+  // Animate mascot traveling and landing pulse
+  useEffect(() => {
+    const go = async () => {
+      await mascotControls.start({ x: mascotPos.x, y: mascotPos.y - 40, transition: { type: 'spring', stiffness: 160, damping: 18 } })
+      await mascotControls.start({ y: mascotPos.y, transition: { type: 'spring', stiffness: 200, damping: 16 } })
+      setLandedIndex(activeIndex)
+      // clear pulse after a moment
+      setTimeout(() => setLandedIndex(-1), 900)
+    }
+    go()
+  }, [mascotPos.x, mascotPos.y])
+
   return (
-    <section id="features" className="relative w-full bg-slate-950 py-20 text-white">
+    <section ref={sectionRef} id="features" className="relative w-full bg-slate-950 py-24 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.08),transparent_50%)]" />
+
+      {/* Flowing conduit line that moves to the active feature */}
+      <motion.div aria-hidden className="pointer-events-none absolute left-3 hidden h-full w-1 rounded-full bg-white/5 sm:block" />
+
+      {/* AI Mascot Sphere (brand element) */}
+      <motion.div
+        aria-label="AI companion"
+        className="pointer-events-none absolute z-20 hidden select-none sm:block"
+        animate={mascotControls}
+        initial={{ x: 26, y: 0 }}
+      >
+        {/* Sphere */}
+        <motion.div
+          className="relative h-8 w-8 rounded-full"
+          animate={{ rotate: [0, 360] }}
+          transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+          style={{
+            background:
+              'radial-gradient(circle at 30% 30%, rgba(251,191,36,0.9), rgba(168,85,247,0.85) 40%, rgba(59,130,246,0.85) 70%)',
+            boxShadow: '0 0 24px rgba(168,85,247,0.6), 0 0 48px rgba(251,191,36,0.35)'
+          }}
+        >
+          {/* subtle highlight */}
+          <div className="absolute left-1 top-1 h-2 w-2 rounded-full bg-white/70 blur-[1px]" />
+        </motion.div>
+        {/* Trail */}
+        <motion.div
+          className="-mt-2 ml-3 h-10 w-2 origin-top rounded-full"
+          animate={{ scaleY: [0.6, 1, 0.6], opacity: [0.35, 0.12, 0.35] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(168,85,247,0.6), rgba(168,85,247,0.0))'
+          }}
+        />
+      </motion.div>
+
+      {/* Moving spotlight that follows focus across rows */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 hidden sm:block"
+        style={{ top: 0 }}
+        animate={{ top: (indicatorY || 0) - 140 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+      >
+        <div className="mx-auto h-44 max-w-5xl rounded-full bg-[radial-gradient(closest-side,rgba(168,85,247,0.12),transparent_70%)] blur-2xl" />
+      </motion.div>
+
       <div className="relative mx-auto max-w-7xl px-6 md:px-10">
         <div className="mb-12 max-w-3xl">
           <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Everything you need to launch a conversational AI business</h2>
           <p className="mt-3 text-white/70">From brand customization to enterprise governance—launch once and operate everywhere.</p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           {items.map((item, idx) => (
-            <FeatureRow key={item.title} index={idx} {...item} />
+            <FeatureRow
+              key={item.title}
+              index={idx}
+              focused={idx === activeIndex}
+              landed={idx === landedIndex}
+              onMountRef={(i, r) => setRefAtIndex(i, r)}
+              {...item}
+            />
           ))}
         </div>
       </div>
