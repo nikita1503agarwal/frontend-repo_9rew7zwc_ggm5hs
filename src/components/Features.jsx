@@ -271,7 +271,6 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, onMountRef
   const alignClass = align === 'left' ? 'mr-auto' : 'ml-auto'
 
   const baseClasses = 'group relative w-full max-w-3xl overflow-hidden rounded-3xl border p-6 md:p-8 backdrop-blur'
-  const focusedClasses = 'bg-white/20 border-white/30 ring-1 ring-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]'
   const idleClasses = 'bg-white/5 border-white/10'
 
   return (
@@ -281,18 +280,40 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, onMountRef
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5 }}
-      className={`${baseClasses} ${alignClass} ${focused ? focusedClasses : idleClasses} min-h-[240px] md:min-h-[280px]`}
+      className={`${baseClasses} ${alignClass} ${idleClasses} min-h-[240px] md:min-h-[280px]`}
       style={{
-        backgroundImage: focused
-          ? 'linear-gradient(to bottom right, rgba(255,255,255,0.22), rgba(255,255,255,0.14))'
-          : undefined,
         WebkitBackdropFilter: 'blur(14px)',
         backdropFilter: 'blur(14px)'
       }}
     >
-      {/* Accent edge and subtle glow when focused */}
+      {/* Golden energy pulse border when focused */}
       {focused && (
-        <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/30" aria-hidden />
+        <>
+          {/* Base gold glow */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-3xl"
+            style={{
+              boxShadow: '0 0 0 1px rgba(251,191,36,0.55), 0 0 24px rgba(251,191,36,0.35)'
+            }}
+            animate={{ opacity: [0.75, 0.35, 0.75] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* Pulsating ring from orb contact point using CSS vars */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-[-2px] rounded-[26px]"
+            style={{
+              background: 'radial-gradient(120px 120px at var(--pulse-x,50%) var(--pulse-y,50%), rgba(251,191,36,0.65), rgba(251,191,36,0.15) 30%, transparent 60%)',
+              WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+              WebkitMaskComposite: 'xor',
+              maskComposite: 'exclude',
+              padding: '2px'
+            }}
+            animate={{ opacity: [0.9, 0.25, 0.9], scale: [1, 1.02, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </>
       )}
 
       <div className="flex flex-col items-start gap-6">
@@ -300,13 +321,13 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, onMountRef
           <motion.div
             animate={{ scale: focused ? 1.06 : 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${focused ? 'bg-white/30 ring-1 ring-white/40' : 'bg-gradient-to-tr from-purple-500/30 to-amber-400/30 ring-1 ring-white/10'}`}
+            className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500/30 to-amber-400/30 ring-1 ring-white/10`}
           >
-            <Icon className={`h-7 w-7 ${focused ? 'text-slate-900' : 'text-white'}`} />
+            <Icon className={`h-7 w-7 text-white`} />
           </motion.div>
           <div>
-            <h3 className={`text-xl font-semibold leading-tight md:text-2xl ${focused ? 'text-slate-900 drop-shadow-sm' : ''}`}>{title}</h3>
-            <p className={`mt-2 text-sm md:text-base ${focused ? 'text-slate-800/80' : 'text-white/75'}`}>{desc}</p>
+            <h3 className={`text-xl font-semibold leading-tight md:text-2xl text-white`}>{title}</h3>
+            <p className={`mt-2 text-sm md:text-base text-white/75`}>{desc}</p>
           </div>
         </div>
         <div className="relative mt-3 w-full">
@@ -385,7 +406,7 @@ export default function Features() {
     setMascotPos({ x: hoverX, y: hoverY })
     lastTargetRef.current = { x: hoverX, y: hoverY }
 
-    // Set CSS vars for potential effects
+    // Pulse origin follows orb
     const localX = alignRight ? tileRect.width * 0.18 : tileRect.width * 0.82
     const localY = tileRect.height * 0.28
     activeRef.style.setProperty('--pulse-x', `${localX}px`)
