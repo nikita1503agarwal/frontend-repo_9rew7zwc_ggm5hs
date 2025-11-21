@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, useInView, useAnimation } from 'framer-motion'
+import { motion, useInView, useAnimation, useReducedMotion } from 'framer-motion'
 import { Headphones, MessageCircle, Globe2, ShieldCheck, PhoneCall, Wallet, Settings2, History, Layers3, FileText, Users2, Cpu } from 'lucide-react'
 
 const items = [
@@ -79,11 +79,12 @@ const items = [
 
 function RowAnimation({ type, focused }) {
   // Futuristic mini-visuals using animated SVGs; intensity increases when focused
+  const prefersReduced = useReducedMotion()
   const common = {
     initial: { opacity: 0, y: 12 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, amount: 0.3 },
-    transition: { duration: 0.5 },
+    transition: { duration: prefersReduced ? 0 : 0.5 },
   }
 
   const stroke = 'rgba(255,255,255,0.6)'
@@ -103,7 +104,7 @@ function RowAnimation({ type, focused }) {
           <circle cx="150" cy="60" r="22" fill="url(#g1)" />
           {[0,1,2,3,4,5].map((i)=> (
             <motion.circle key={i} cx="150" cy="60" r={38 + i*10} fill="none" stroke={i%2?glow:stroke} strokeWidth="0.8"
-              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2 + i*0.15, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: (prefersReduced?0:1.2) + i*0.15, repeat: prefersReduced?0:Infinity, repeatType: 'reverse', ease: 'easeInOut' }} />
           ))}
           {[0,1,2,3,4,5,6,7].map((i)=> (
             <motion.circle key={'d'+i} r="3" fill={accent}
@@ -111,7 +112,7 @@ function RowAnimation({ type, focused }) {
                 cx: [150 + Math.cos((i/8)*Math.PI*2)*50, 150 + Math.cos((i/8)*Math.PI*2 + Math.PI)*50],
                 cy: [60 + Math.sin((i/8)*Math.PI*2)*30, 60 + Math.sin((i/8)*Math.PI*2 + Math.PI)*30]
               }}
-              transition={{ duration: 2 + (i%3)*0.4, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: (prefersReduced?0:2) + (i%3)*0.4, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }}
             />
           ))}
         </motion.svg>
@@ -124,7 +125,7 @@ function RowAnimation({ type, focused }) {
               <rect x="20" y={y-5} width="260" height="10" rx="5" fill="rgba(255,255,255,0.08)" />
               <motion.rect x="20" y={y-5} height="10" rx="5" fill={idx===1?glow:accent}
                 animate={{ width: [60, 180, 120, 240, 90] }}
-                transition={{ duration: 3 + idx, repeat: Infinity, ease: 'easeInOut' }} />
+                transition={{ duration: (prefersReduced?0:3) + idx, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }} />
             </g>
           ))}
         </motion.svg>
@@ -146,7 +147,7 @@ function RowAnimation({ type, focused }) {
           <motion.rect x="95" y="28" width="110" height="64" fill="url(#scan)"
             animate={{ y: [28, 28, 28], }} />
           <motion.line x1="95" x2="205" stroke={accent} strokeWidth="1"
-            animate={{ y1: [28, 92], y2: [28, 92] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }} />
+            animate={{ y1: [28, 92], y2: [28, 92] }} transition={{ duration: prefersReduced?0:2, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }} />
         </motion.svg>
       )
     case 'globe':
@@ -155,11 +156,11 @@ function RowAnimation({ type, focused }) {
           <circle cx="150" cy="60" r="36" fill="rgba(99,102,241,0.1)" stroke={glow} />
           {[0, 30, 60, 90].map((r,i)=> (
             <motion.ellipse key={r} cx="150" cy="60" rx="36" ry="14" fill="none" stroke={stroke}
-              animate={{ rotate: [r, r+180] }} origin="150 60" transition={{ duration: 6 + i, repeat: Infinity, ease: 'linear' }} />
+              animate={{ rotate: [r, r+180] }} origin="150 60" transition={{ duration: (prefersReduced?0:6) + i, repeat: prefersReduced?0:Infinity, ease: 'linear' }} />
           ))}
           {[0,1,2,3,4].map((i)=> (
             <motion.circle key={i} r="3" fill={accent}
-              animate={{ cx: [150-36,150+36], cy: [60-10,60+10] }} transition={{ duration: 3 + i*0.5, repeat: Infinity, repeatType: 'reverse' }} />
+              animate={{ cx: [150-36,150+36], cy: [60-10,60+10] }} transition={{ duration: (prefersReduced?0:3) + i*0.5, repeat: prefersReduced?0:Infinity, repeatType: 'reverse' }} />
           ))}
         </motion.svg>
       )
@@ -171,7 +172,7 @@ function RowAnimation({ type, focused }) {
             <polygon points="80,85 92,75 68,75" fill="rgba(255,255,255,0.06)" />
             {[0,1,2].map((i)=> (
               <motion.circle key={i} cx={80 + i*16} cy="55" r="4" fill={glow}
-                animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }} transition={{ duration: 1.2, delay: i*0.15, repeat: Infinity }} />
+                animate={{ opacity: [0.3, 1, 0.3], y: [0, -2, 0] }} transition={{ duration: prefersReduced?0:1.2, delay: i*0.15, repeat: prefersReduced?0:Infinity }} />
             ))}
           </g>
           <g>
@@ -185,7 +186,7 @@ function RowAnimation({ type, focused }) {
         <motion.svg {...common} viewBox="0 0 300 120" className="h-28 w-full">
           {[0,1,2,3,4,5,6,7,8,9].map((i)=> (
             <motion.rect key={i} x={40 + i*22} y="40" width="10" rx="3" fill={i%2?glow:accent}
-              animate={{ height: [10, 60, 18, 40, 12] }} transition={{ duration: 1.6, delay: i*0.05, repeat: Infinity, ease: 'easeInOut' }} />
+              animate={{ height: [10, 60, 18, 40, 12] }} transition={{ duration: prefersReduced?0:1.6, delay: i*0.05, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }} />
           ))}
         </motion.svg>
       )
@@ -194,7 +195,7 @@ function RowAnimation({ type, focused }) {
         <motion.svg {...common} viewBox="0 0 300 120" className="h-28 w-full overflow-visible">
           {[0,1,2,3,4].map((i)=> (
             <motion.g key={i} transform={`translate(${60 + i*40},90)`}
-              animate={{ y: [90, 20, 90], rotate: [0, -10, 0] }} transition={{ duration: 3 + i*0.3, repeat: Infinity, ease: 'easeInOut' }}>
+              animate={{ y: [90, 20, 90], rotate: [0, -10, 0] }} transition={{ duration: (prefersReduced?0:3) + i*0.3, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }}>
               <rect x="-12" y="-16" width="24" height="32" rx="3" fill="rgba(255,255,255,0.06)" stroke={stroke} />
               <line x1="-6" x2="6" y1="-6" y2="-6" stroke={glow} />
               <line x1="-6" x2="8" y1="0" y2="0" stroke={stroke} />
@@ -206,10 +207,10 @@ function RowAnimation({ type, focused }) {
       return (
         <motion.svg {...common} viewBox="0 0 300 120" className="h-28 w-full">
           <motion.line x1="40" x2="260" y1="60" y2="60" stroke={stroke} strokeWidth="1" strokeDasharray="4 6"
-            animate={{ strokeDashoffset: [0, 40] }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} />
+            animate={{ strokeDashoffset: [0, 40] }} transition={{ duration: prefersReduced?0:2, repeat: prefersReduced?0:Infinity, ease: 'linear' }} />
           {[0,1,2,3,4].map((i)=> (
             <motion.circle key={i} cy="60" r="5" fill={i%2?glow:accent}
-              animate={{ cx: [60 + i*40, 80 + i*40] }} transition={{ duration: 1.6, repeat: Infinity, repeatType: 'reverse' }} />
+              animate={{ cx: [60 + i*40, 80 + i*40] }} transition={{ duration: prefersReduced?0:1.6, repeat: prefersReduced?0:Infinity, repeatType: 'reverse' }} />
           ))}
         </motion.svg>
       )
@@ -217,7 +218,7 @@ function RowAnimation({ type, focused }) {
       return (
         <motion.svg {...common} viewBox="0 0 300 120" className="h-28 w-full">
           <motion.circle cx="150" cy="60" r="26" fill="rgba(251,191,36,0.1)" stroke={accent}
-            animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 1.8, repeat: Infinity }} />
+            animate={{ scale: [1, 1.06, 1] }} transition={{ duration: prefersReduced?0:1.8, repeat: prefersReduced?0:Infinity }} />
           <motion.text x="150" y="66" textAnchor="middle" fill={accent} fontSize="22" fontFamily="system-ui" fontWeight="700"
             animate={{ y: [66, 62, 66] }}>$</motion.text>
         </motion.svg>
@@ -228,7 +229,7 @@ function RowAnimation({ type, focused }) {
           {[0,1,2].map((i)=> (
             <motion.rect key={i} x={80 + i*30} y={40 - i*6} width={120 - i*20} height={60 - i*10} rx="10"
               fill={`rgba(255,255,255,${0.06 + i*0.04})`} stroke={i%2?glow:stroke}
-              animate={{ y: [40 - i*6, 36 - i*6, 40 - i*6] }} transition={{ duration: 2 + i*0.3, repeat: Infinity, ease: 'easeInOut' }} />
+              animate={{ y: [40 - i*6, 36 - i*6, 40 - i*6] }} transition={{ duration: (prefersReduced?0:2) + i*0.3, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }} />
           ))}
         </motion.svg>
       )
@@ -237,7 +238,7 @@ function RowAnimation({ type, focused }) {
         <motion.svg {...common} viewBox="0 0 300 120" className="h-28 w-full">
           <circle cx="150" cy="60" r="30" fill="rgba(168,85,247,0.08)" stroke={glow} />
           <motion.circle cx="150" cy="60" r="30" fill="none" stroke={accent} strokeWidth="4" strokeDasharray="180 200"
-            animate={{ strokeDashoffset: [180, 360] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} />
+            animate={{ strokeDashoffset: [180, 360] }} transition={{ duration: prefersReduced?0:3, repeat: prefersReduced?0:Infinity, ease: 'linear' }} />
           <motion.text x="150" y="66" textAnchor="middle" fill="white" fontSize="14" fontFamily="system-ui"
             animate={{ opacity: [0.6, 1, 0.6] }}>Set up</motion.text>
         </motion.svg>
@@ -249,7 +250,7 @@ function RowAnimation({ type, focused }) {
             <g key={row}>
               {[0,1,2,3,4,5,6,7,8,9].map((i)=> (
                 <motion.rect key={i} x={40 + i*22} y={30 + row*24} width="10" rx="3" fill={row===1?glow:accent}
-                  animate={{ height: [8, 28 + (row*6), 12, 22] }} transition={{ duration: 1.4, delay: (row*0.1) + i*0.03, repeat: Infinity, ease: 'easeInOut' }} />
+                  animate={{ height: [8, 28 + (row*6), 12, 22] }} transition={{ duration: prefersReduced?0:1.4, delay: (row*0.1) + i*0.03, repeat: prefersReduced?0:Infinity, ease: 'easeInOut' }} />
               ))}
             </g>
           ))}
@@ -260,9 +261,9 @@ function RowAnimation({ type, focused }) {
   }
 }
 
-function FeatureRow({ icon: Icon, title, desc, type, index, focused, landed, onMountRef }) {
+function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, onMountRef }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { margin: '-40% 0px -40% 0px' })
+  const inView = useInView(ref, { margin: '-35% 0px -35% 0px' })
 
   useEffect(() => {
     if (onMountRef) onMountRef(index, ref)
@@ -277,23 +278,20 @@ function FeatureRow({ icon: Icon, title, desc, type, index, focused, landed, onM
       transition={{ duration: 0.5 }}
       className={`group relative overflow-hidden rounded-3xl border bg-white/5 p-6 md:p-8 backdrop-blur ${focused ? 'border-purple-400/40 ring-1 ring-purple-400/30' : 'border-white/10'} min-h-[240px] md:min-h-[280px]`}
     >
-      {/* Absorb pulse when mascot lands */}
+      {/* Absorb pulse when mascot merges in */}
       {landed && (
         <motion.div
           aria-hidden
-          className="pointer-events-none absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full"
-          initial={{ scale: 0.6, opacity: 0.7 }}
-          animate={{ scale: [0.6, 2.2, 3.6], opacity: [0.7, 0.4, 0] }}
-          transition={{ duration: 1 }}
-          style={{
-            background: 'radial-gradient(circle at center, rgba(168,85,247,0.6), transparent 60%)',
-            filter: 'blur(4px)'
-          }}
+          className="pointer-events-none absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.25, 0.1, 0] }}
+          transition={{ duration: 1.1 }}
+          style={{ background: 'radial-gradient(circle at var(--pulse-x,50%) var(--pulse-y,50%), rgba(168,85,247,0.25), transparent 60%)' }}
         />
       )}
 
-      <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:gap-10">
-        <div className="flex min-w-0 flex-1 items-start gap-5">
+      <div className="flex flex-col items-start gap-6">
+        <div className="flex min-w-0 items-start gap-5">
           <motion.div
             animate={{ scale: focused ? 1.06 : 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
@@ -306,7 +304,7 @@ function FeatureRow({ icon: Icon, title, desc, type, index, focused, landed, onM
             <p className="mt-2 text-sm text-white/75 md:text-base">{desc}</p>
           </div>
         </div>
-        <div className="relative mt-3 w-full md:mt-0 md:w-1/2">
+        <div className="relative mt-3 w-full">
           <RowAnimation type={type} focused={focused} />
         </div>
       </div>
@@ -319,57 +317,79 @@ function FeatureRow({ icon: Icon, title, desc, type, index, focused, landed, onM
 
 export default function Features() {
   const sectionRef = useRef(null)
-  const rowRefs = useRef([])
+  const gridRef = useRef(null)
+  const tileRefs = useRef([])
   const [activeIndex, setActiveIndex] = useState(0)
-  const [indicatorY, setIndicatorY] = useState(0)
   const [mascotPos, setMascotPos] = useState({ x: 0, y: 0 })
   const [landedIndex, setLandedIndex] = useState(-1)
+  const [launched, setLaunched] = useState(false)
   const mascotControls = useAnimation()
+  const prefersReduced = useReducedMotion()
 
   const setRefAtIndex = (index, ref) => {
-    rowRefs.current[index] = ref
+    tileRefs.current[index] = ref
   }
 
-  // Observe which row is most centered in viewport
+  // Observe tiles; only consider visible ones and pick the most centered one as active
   useEffect(() => {
     const observers = []
-    rowRefs.current.forEach((r, idx) => {
-      if (!r?.current) return
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setActiveIndex((prev) => (idx !== prev ? idx : prev))
-            }
-          })
-        },
-        { root: null, rootMargin: '-40% 0px -40% 0px', threshold: 0 }
-      )
-      observer.observe(r.current)
-      observers.push(observer)
-    })
-    return () => observers.forEach((o) => o.disconnect())
+    const updateActive = () => {
+      const viewportCenter = window.innerHeight / 2
+      let bestIdx = 0
+      let bestDist = Infinity
+      tileRefs.current.forEach((r, idx) => {
+        const el = r?.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const fullyOut = rect.bottom < 0 || rect.top > window.innerHeight
+        if (fullyOut) return
+        const center = rect.top + rect.height / 2
+        const dist = Math.abs(center - viewportCenter)
+        if (dist < bestDist) {
+          bestDist = dist
+          bestIdx = idx
+        }
+      })
+      setActiveIndex(bestIdx)
+    }
+
+    const onScroll = () => updateActive()
+    const onResize = () => updateActive()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
+    updateActive()
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+    }
   }, [])
 
-  // Update indicator position
-  const updatePositions = () => {
+  // Compute mascot target to hover near the active tile center (free-floating across grid)
+  const updateMascotTarget = () => {
     const sec = sectionRef.current
-    const activeRef = rowRefs.current[activeIndex]?.current
-    if (!sec || !activeRef) return
-    const secRect = sec.getBoundingClientRect()
-    const rowRect = activeRef.getBoundingClientRect()
-    const y = rowRect.top - secRect.top + rowRect.height / 2
-    setIndicatorY(y)
+    const grid = gridRef.current
+    const activeRef = tileRefs.current[activeIndex]?.current
+    if (!sec || !grid || !activeRef) return
 
-    // Mascot target slightly left of card content (near icon)
-    const x = 26 // left gutter offset for mascot
-    setMascotPos({ x, y })
+    const secRect = sec.getBoundingClientRect()
+    const gridRect = grid.getBoundingClientRect()
+    const tileRect = activeRef.getBoundingClientRect()
+
+    // Choose a hover point that is slightly offset within the tile for life-like motion
+    const hoverX = tileRect.left - secRect.left + tileRect.width * 0.82
+    const hoverY = tileRect.top - secRect.top + tileRect.height * 0.25
+
+    setMascotPos({ x: hoverX, y: hoverY })
+
+    // Also set CSS vars on tile for merge pulse origin
+    activeRef.style.setProperty('--pulse-x', `${tileRect.width * 0.82}px`)
+    activeRef.style.setProperty('--pulse-y', `${tileRect.height * 0.25}px`)
   }
 
   useEffect(() => {
-    updatePositions()
-    const onScroll = () => updatePositions()
-    const onResize = () => updatePositions()
+    updateMascotTarget()
+    const onScroll = () => updateMascotTarget()
+    const onResize = () => updateMascotTarget()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
     return () => {
@@ -378,68 +398,104 @@ export default function Features() {
     }
   }, [activeIndex])
 
-  // Animate mascot traveling and landing pulse
+  // Launch from hero's Spline orb on first scroll into features
+  useEffect(() => {
+    if (launched) return
+    const src = document.getElementById('mascot-source')
+    const section = sectionRef.current
+    if (!src || !section) return
+
+    const srcRect = src.getBoundingClientRect()
+    const secRect = section.getBoundingClientRect()
+    const startX = srcRect.left - secRect.left
+    const startY = srcRect.top - secRect.top
+
+    mascotControls.set({ x: startX, y: startY })
+
+    const handleFirstScroll = () => {
+      setLaunched(true)
+      updateMascotTarget()
+      const pathMidX = (startX + mascotPos.x) / 2 + 80
+      const pathMidY = (startY + mascotPos.y) / 2 - 160
+      mascotControls.start({
+        x: [startX, pathMidX, mascotPos.x],
+        y: [startY, pathMidY, mascotPos.y],
+        rotate: prefersReduced ? 0 : [0, 180, 360],
+        transition: { duration: prefersReduced ? 0.01 : 1.6, ease: 'easeInOut' }
+      })
+    }
+
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting && !launched) {
+          window.addEventListener('scroll', handleFirstScroll, { once: true })
+        }
+      })
+    }, { threshold: 0.2 })
+
+    obs.observe(section)
+    return () => {
+      window.removeEventListener('scroll', handleFirstScroll)
+      obs.disconnect()
+    }
+  }, [launched])
+
+  // Travel and merge pulse when active changes
   useEffect(() => {
     const go = async () => {
-      await mascotControls.start({ x: mascotPos.x, y: mascotPos.y - 40, transition: { type: 'spring', stiffness: 160, damping: 18 } })
-      await mascotControls.start({ y: mascotPos.y, transition: { type: 'spring', stiffness: 200, damping: 16 } })
+      if (!launched) return
+      if (prefersReduced) {
+        mascotControls.set({ x: mascotPos.x, y: mascotPos.y })
+        setLandedIndex(activeIndex)
+        setTimeout(() => setLandedIndex(-1), 600)
+        return
+      }
+      await mascotControls.start({ x: mascotPos.x, y: mascotPos.y - 28, transition: { type: 'spring', stiffness: 160, damping: 18 } })
+      await mascotControls.start({ y: mascotPos.y, transition: { type: 'spring', stiffness: 210, damping: 16 } })
       setLandedIndex(activeIndex)
-      // clear pulse after a moment
       setTimeout(() => setLandedIndex(-1), 900)
     }
     go()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotPos.x, mascotPos.y])
 
   return (
     <section ref={sectionRef} id="features" className="relative w-full bg-slate-950 py-24 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.08),transparent_50%)]" />
 
-      {/* Flowing conduit line that moves to the active feature */}
-      <motion.div aria-hidden className="pointer-events-none absolute left-3 hidden h-full w-1 rounded-full bg-white/5 sm:block" />
-
-      {/* AI Mascot Sphere (brand element) */}
+      {/* AI Mascot Sphere (free-floating) */}
       <motion.div
         aria-label="AI companion"
-        className="pointer-events-none absolute z-20 hidden select-none sm:block"
+        className="pointer-events-none absolute z-30 hidden select-none md:block"
         animate={mascotControls}
         initial={{ x: 26, y: 0 }}
       >
-        {/* Sphere */}
+        {/* Sphere core */}
         <motion.div
-          className="relative h-8 w-8 rounded-full"
-          animate={{ rotate: [0, 360] }}
-          transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+          className="relative h-9 w-9 rounded-full"
+          animate={prefersReduced ? {} : { rotate: [0, 360] }}
+          transition={{ repeat: prefersReduced ? 0 : Infinity, duration: 6, ease: 'linear' }}
           style={{
             background:
               'radial-gradient(circle at 30% 30%, rgba(251,191,36,0.9), rgba(168,85,247,0.85) 40%, rgba(59,130,246,0.85) 70%)',
-            boxShadow: '0 0 24px rgba(168,85,247,0.6), 0 0 48px rgba(251,191,36,0.35)'
+            boxShadow: '0 0 26px rgba(168,85,247,0.6), 0 0 60px rgba(251,191,36,0.35)'
           }}
         >
-          {/* subtle highlight */}
           <div className="absolute left-1 top-1 h-2 w-2 rounded-full bg-white/70 blur-[1px]" />
         </motion.div>
-        {/* Trail */}
-        <motion.div
-          className="-mt-2 ml-3 h-10 w-2 origin-top rounded-full"
-          animate={{ scaleY: [0.6, 1, 0.6], opacity: [0.35, 0.12, 0.35] }}
-          transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
-          style={{
-            background:
-              'linear-gradient(to bottom, rgba(168,85,247,0.6), rgba(168,85,247,0.0))'
-          }}
-        />
+        {/* Energy trail */}
+        {!prefersReduced && (
+          <motion.div
+            className="-mt-2 ml-3 h-10 w-2 origin-top rounded-full"
+            animate={{ scaleY: [0.6, 1, 0.6], opacity: [0.35, 0.12, 0.35] }}
+            transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+            style={{ background: 'linear-gradient(to bottom, rgba(168,85,247,0.6), rgba(168,85,247,0.0))' }}
+          />
+        )}
       </motion.div>
 
-      {/* Moving spotlight that follows focus across rows */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 hidden sm:block"
-        style={{ top: 0 }}
-        animate={{ top: (indicatorY || 0) - 140 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-      >
-        <div className="mx-auto h-44 max-w-5xl rounded-full bg-[radial-gradient(closest-side,rgba(168,85,247,0.12),transparent_70%)] blur-2xl" />
-      </motion.div>
+      {/* Spotlight softly tracking the active tile */}
+      <ActiveSpotlight tileRefs={tileRefs} activeIndex={activeIndex} />
 
       <div className="relative mx-auto max-w-7xl px-6 md:px-10">
         <div className="mb-12 max-w-3xl">
@@ -447,19 +503,72 @@ export default function Features() {
           <p className="mt-3 text-white/70">From brand customization to enterprise governance—launch once and operate everywhere.</p>
         </div>
 
-        <div className="flex flex-col gap-6">
+        {/* Masonry grid of tiles */}
+        <div ref={gridRef} className="[column-fill:_balance] columns-1 gap-6 sm:columns-2 lg:columns-3">
           {items.map((item, idx) => (
-            <FeatureRow
-              key={item.title}
-              index={idx}
-              focused={idx === activeIndex}
-              landed={idx === landedIndex}
-              onMountRef={(i, r) => setRefAtIndex(i, r)}
-              {...item}
-            />
+            <div key={item.title} className="mb-6 break-inside-avoid">
+              <FeatureTile
+                index={idx}
+                focused={idx === activeIndex}
+                landed={idx === landedIndex}
+                onMountRef={(i, r) => setRefAtIndex(i, r)}
+                {...item}
+              />
+            </div>
           ))}
         </div>
       </div>
+
+      {/* Gamified click hints on CTAs when mascot is near bottom of section */}
+      {!prefersReduced && <ClickHints />}
     </section>
+  )
+}
+
+function ActiveSpotlight({ tileRefs, activeIndex }) {
+  const [style, setStyle] = useState({ left: 0, top: 0, width: 0 })
+  useEffect(() => {
+    const update = () => {
+      const active = tileRefs.current[activeIndex]?.current
+      if (!active) return
+      const rect = active.getBoundingClientRect()
+      setStyle({ left: rect.left, top: rect.top - 100, width: rect.width })
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [activeIndex])
+  return (
+    <motion.div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-0 hidden md:block">
+      <motion.div
+        className="mx-auto h-56 rounded-full bg-[radial-gradient(closest-side,rgba(168,85,247,0.14),transparent_70%)] blur-2xl"
+        animate={{ left: style.left, top: style.top, width: style.width }}
+        transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        style={{ position: 'absolute' }}
+      />
+    </motion.div>
+  )
+}
+
+function ClickHints() {
+  // periodic hint pings for primary CTAs
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const t = setInterval(() => setShow((s) => !s), 5000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div className="pointer-events-none absolute bottom-8 left-0 right-0 z-20 mx-auto flex max-w-7xl justify-between px-6 md:px-10">
+      <div className="relative h-6 w-6">
+        {show && <span className="absolute -left-1 -top-1 block h-6 w-6 animate-ping rounded-full bg-amber-400/70" />}
+      </div>
+      <div className="relative h-6 w-6">
+        {show && <span className="absolute -right-1 -top-1 block h-6 w-6 animate-ping rounded-full bg-purple-400/70" />}
+      </div>
+    </div>
   )
 }

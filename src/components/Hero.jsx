@@ -52,8 +52,10 @@ export default function Hero() {
             <a href="#pricing" className="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-slate-900 shadow-lg shadow-purple-500/20 transition hover:bg-slate-100">
               Get Started • 3 min onboarding
             </a>
-            <a href="#features" className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 px-5 py-3 text-white/90 backdrop-blur transition hover:bg-white/10">
+            <a href="#features" className="relative inline-flex items-center justify-center rounded-lg border border-white/15 bg-white/5 px-5 py-3 text-white/90 backdrop-blur transition hover:bg-white/10">
               Explore Features
+              {/* playful click hint */}
+              <span className="pointer-events-none absolute -right-2 -top-2 hidden animate-ping rounded-full bg-amber-400/70 p-1.5 sm:block" />
             </a>
           </motion.div>
 
@@ -84,6 +86,9 @@ export default function Hero() {
 
           {/* Ring accent */}
           <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-white/10" />
+
+          {/* Mascot launch anchor positioned near the glowing orb area */}
+          <div id="mascot-source" className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full" />
         </div>
       </div>
     </section>
