@@ -260,7 +260,7 @@ function RowAnimation({ type, focused }) {
   }
 }
 
-function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, onMountRef, align = 'left' }) {
+function FeatureTile({ icon: Icon, title, desc, type, index, focused, onMountRef, align = 'left' }) {
   const ref = useRef(null)
   const inView = useInView(ref, { margin: '-35% 0px -35% 0px' })
 
@@ -270,6 +270,10 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, on
 
   const alignClass = align === 'left' ? 'mr-auto' : 'ml-auto'
 
+  const baseClasses = 'group relative w-full max-w-3xl overflow-hidden rounded-3xl border p-6 md:p-8 backdrop-blur'
+  const focusedClasses = 'bg-white/20 border-white/30 ring-1 ring-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]'
+  const idleClasses = 'bg-white/5 border-white/10'
+
   return (
     <motion.div
       ref={ref}
@@ -277,18 +281,18 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, on
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5 }}
-      className={`group relative ${alignClass} w-full max-w-3xl overflow-hidden rounded-3xl border bg-white/5 p-6 md:p-8 backdrop-blur ${focused ? 'border-purple-400/40 ring-1 ring-purple-400/30' : 'border-white/10'} min-h-[240px] md:min-h-[280px]`}
+      className={`${baseClasses} ${alignClass} ${focused ? focusedClasses : idleClasses} min-h-[240px] md:min-h-[280px]`}
+      style={{
+        backgroundImage: focused
+          ? 'linear-gradient(to bottom right, rgba(255,255,255,0.22), rgba(255,255,255,0.14))'
+          : undefined,
+        WebkitBackdropFilter: 'blur(14px)',
+        backdropFilter: 'blur(14px)'
+      }}
     >
-      {/* Absorb pulse when mascot merges in */}
-      {landed && (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.35, 0.18, 0] }}
-          transition={{ duration: 1.1 }}
-          style={{ background: 'radial-gradient(circle at var(--pulse-x,50%) var(--pulse-y,50%), rgba(168,85,247,0.35), transparent 60%)' }}
-        />
+      {/* Accent edge and subtle glow when focused */}
+      {focused && (
+        <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/30" aria-hidden />
       )}
 
       <div className="flex flex-col items-start gap-6">
@@ -296,13 +300,13 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, on
           <motion.div
             animate={{ scale: focused ? 1.06 : 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500/30 to-amber-400/30 ring-1 ring-white/10"
+            className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${focused ? 'bg-white/30 ring-1 ring-white/40' : 'bg-gradient-to-tr from-purple-500/30 to-amber-400/30 ring-1 ring-white/10'}`}
           >
-            <Icon className="h-7 w-7 text-white" />
+            <Icon className={`h-7 w-7 ${focused ? 'text-slate-900' : 'text-white'}`} />
           </motion.div>
           <div>
-            <h3 className="text-xl font-semibold leading-tight md:text-2xl">{title}</h3>
-            <p className="mt-2 text-sm text-white/75 md:text-base">{desc}</p>
+            <h3 className={`text-xl font-semibold leading-tight md:text-2xl ${focused ? 'text-slate-900 drop-shadow-sm' : ''}`}>{title}</h3>
+            <p className={`mt-2 text-sm md:text-base ${focused ? 'text-slate-800/80' : 'text-white/75'}`}>{desc}</p>
           </div>
         </div>
         <div className="relative mt-3 w-full">
@@ -322,7 +326,6 @@ export default function Features() {
   const tileRefs = useRef([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [mascotPos, setMascotPos] = useState({ x: 0, y: 0 })
-  const [landedIndex, setLandedIndex] = useState(-1)
   const [launched, setLaunched] = useState(false)
   const mascotControls = useAnimation()
   const prefersReduced = useReducedMotion()
@@ -382,7 +385,7 @@ export default function Features() {
     setMascotPos({ x: hoverX, y: hoverY })
     lastTargetRef.current = { x: hoverX, y: hoverY }
 
-    // Set CSS vars for merge pulse origin
+    // Set CSS vars for potential effects
     const localX = alignRight ? tileRect.width * 0.18 : tileRect.width * 0.82
     const localY = tileRect.height * 0.28
     activeRef.style.setProperty('--pulse-x', `${localX}px`)
@@ -442,26 +445,20 @@ export default function Features() {
     }
   }, [launched])
 
-  // On active tile change: reform, travel, then merge and pulse
+  // On active tile change: reform, travel, then hover (no absorption)
   useEffect(() => {
     const animateSequence = async () => {
       if (!launched) return
       if (prefersReduced) {
         mascotControls.set({ x: mascotPos.x, y: mascotPos.y, scale: 1, opacity: 1 })
-        setLandedIndex(activeIndex)
-        setTimeout(() => setLandedIndex(-1), 600)
         return
       }
 
-      // Reform as a sphere from previous merge point
+      // Reform as a sphere and travel to hover point with a soft settle; stay visible
       await mascotControls.start({ scale: 1, opacity: 1, transition: { duration: 0.18 } })
-      // Travel with a slight arc and settle above target
       await mascotControls.start({ x: mascotPos.x, y: mascotPos.y - 28, transition: { type: 'spring', stiffness: 160, damping: 18 } })
       await mascotControls.start({ y: mascotPos.y, transition: { type: 'spring', stiffness: 210, damping: 16 } })
-      // Merge into tile: disappear and pulse
-      await mascotControls.start({ scale: 0.001, opacity: 0, transition: { duration: 0.3 } })
-      setLandedIndex(activeIndex)
-      setTimeout(() => setLandedIndex(-1), 900)
+      // Remain hovering
     }
     animateSequence()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -471,7 +468,7 @@ export default function Features() {
     <section ref={sectionRef} id="features" className="relative w-full bg-slate-950 py-24 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.08),transparent_50%)]" />
 
-      {/* AI Mascot Sphere (reforms, travels, merges) */}
+      {/* AI Mascot Sphere (reforms, travels, hovers) */}
       <motion.div
         aria-label="AI companion"
         className="pointer-events-none absolute z-30 hidden select-none md:block will-change-transform"
@@ -514,12 +511,11 @@ export default function Features() {
         {/* Linear, alternating tiles: left then right */}
         <div ref={listRef} className="flex flex-col gap-8">
           {items.map((item, idx) => (
-            <div key={item.title} className={`w-full`}> 
+            <div key={item.title} className={`w-full`}>
               <FeatureTile
                 index={idx}
                 align={idx % 2 === 0 ? 'left' : 'right'}
                 focused={idx === activeIndex}
-                landed={idx === landedIndex}
                 onMountRef={(i, r) => setRefAtIndex(i, r)}
                 {...item}
               />
