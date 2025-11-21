@@ -261,13 +261,15 @@ function RowAnimation({ type, focused }) {
   }
 }
 
-function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, onMountRef }) {
+function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, onMountRef, align = 'left' }) {
   const ref = useRef(null)
   const inView = useInView(ref, { margin: '-35% 0px -35% 0px' })
 
   useEffect(() => {
     if (onMountRef) onMountRef(index, ref)
   }, [index, onMountRef])
+
+  const alignClass = align === 'left' ? 'mr-auto' : 'ml-auto'
 
   return (
     <motion.div
@@ -276,7 +278,7 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, on
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5 }}
-      className={`group relative overflow-hidden rounded-3xl border bg-white/5 p-6 md:p-8 backdrop-blur ${focused ? 'border-purple-400/40 ring-1 ring-purple-400/30' : 'border-white/10'} min-h-[240px] md:min-h-[280px]`}
+      className={`group relative ${alignClass} w-full max-w-3xl overflow-hidden rounded-3xl border bg-white/5 p-6 md:p-8 backdrop-blur ${focused ? 'border-purple-400/40 ring-1 ring-purple-400/30' : 'border-white/10'} min-h-[240px] md:min-h-[280px]`}
     >
       {/* Absorb pulse when mascot merges in */}
       {landed && (
@@ -284,14 +286,14 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, on
           aria-hidden
           className="pointer-events-none absolute inset-0"
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0.25, 0.1, 0] }}
+          animate={{ opacity: [0.35, 0.18, 0] }}
           transition={{ duration: 1.1 }}
-          style={{ background: 'radial-gradient(circle at var(--pulse-x,50%) var(--pulse-y,50%), rgba(168,85,247,0.25), transparent 60%)' }}
+          style={{ background: 'radial-gradient(circle at var(--pulse-x,50%) var(--pulse-y,50%), rgba(168,85,247,0.35), transparent 60%)' }}
         />
       )}
 
       <div className="flex flex-col items-start gap-6">
-        <div className="flex min-w-0 items-start gap-5">
+        <div className={`flex min-w-0 items-start gap-5 ${align==='right' ? 'flex-row-reverse text-right' : ''}`}>
           <motion.div
             animate={{ scale: focused ? 1.06 : 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
@@ -317,7 +319,7 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, landed, on
 
 export default function Features() {
   const sectionRef = useRef(null)
-  const gridRef = useRef(null)
+  const listRef = useRef(null)
   const tileRefs = useRef([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [mascotPos, setMascotPos] = useState({ x: 0, y: 0 })
@@ -325,14 +327,15 @@ export default function Features() {
   const [launched, setLaunched] = useState(false)
   const mascotControls = useAnimation()
   const prefersReduced = useReducedMotion()
+  const prevIndexRef = useRef(0)
+  const lastTargetRef = useRef({ x: 0, y: 0 })
 
   const setRefAtIndex = (index, ref) => {
     tileRefs.current[index] = ref
   }
 
-  // Observe tiles; only consider visible ones and pick the most centered one as active
+  // Observe tiles in a linear stack; pick the most centered visible tile as active
   useEffect(() => {
-    const observers = []
     const updateActive = () => {
       const viewportCenter = window.innerHeight / 2
       let bestIdx = 0
@@ -364,26 +367,29 @@ export default function Features() {
     }
   }, [])
 
-  // Compute mascot target to hover near the active tile center (free-floating across grid)
+  // Compute mascot target to hover near the active tile center
   const updateMascotTarget = () => {
     const sec = sectionRef.current
-    const grid = gridRef.current
+    const list = listRef.current
     const activeRef = tileRefs.current[activeIndex]?.current
-    if (!sec || !grid || !activeRef) return
+    if (!sec || !list || !activeRef) return
 
     const secRect = sec.getBoundingClientRect()
-    const gridRect = grid.getBoundingClientRect()
     const tileRect = activeRef.getBoundingClientRect()
 
-    // Choose a hover point that is slightly offset within the tile for life-like motion
-    const hoverX = tileRect.left - secRect.left + tileRect.width * 0.82
-    const hoverY = tileRect.top - secRect.top + tileRect.height * 0.25
+    // Hover point depends on alignment: aim near the leading edge icon area
+    const alignRight = activeIndex % 2 === 1
+    const hoverX = (alignRight ? tileRect.left + tileRect.width * 0.18 : tileRect.left + tileRect.width * 0.82) - secRect.left
+    const hoverY = tileRect.top - secRect.top + tileRect.height * 0.28
 
     setMascotPos({ x: hoverX, y: hoverY })
+    lastTargetRef.current = { x: hoverX, y: hoverY }
 
-    // Also set CSS vars on tile for merge pulse origin
-    activeRef.style.setProperty('--pulse-x', `${tileRect.width * 0.82}px`)
-    activeRef.style.setProperty('--pulse-y', `${tileRect.height * 0.25}px`)
+    // Set CSS vars for merge pulse origin
+    const localX = alignRight ? tileRect.width * 0.18 : tileRect.width * 0.82
+    const localY = tileRect.height * 0.28
+    activeRef.style.setProperty('--pulse-x', `${localX}px`)
+    activeRef.style.setProperty('--pulse-y', `${localY}px`)
   }
 
   useEffect(() => {
@@ -410,18 +416,25 @@ export default function Features() {
     const startX = srcRect.left - secRect.left
     const startY = srcRect.top - secRect.top
 
-    mascotControls.set({ x: startX, y: startY })
+    mascotControls.set({ x: startX, y: startY, scale: 1, opacity: 1 })
 
     const handleFirstScroll = () => {
       setLaunched(true)
       updateMascotTarget()
-      const pathMidX = (startX + mascotPos.x) / 2 + 80
-      const pathMidY = (startY + mascotPos.y) / 2 - 160
+      const pathMidX = (startX + lastTargetRef.current.x) / 2 + 80
+      const pathMidY = (startY + lastTargetRef.current.y) / 2 - 160
       mascotControls.start({
-        x: [startX, pathMidX, mascotPos.x],
-        y: [startY, pathMidY, mascotPos.y],
+        x: [startX, pathMidX, lastTargetRef.current.x],
+        y: [startY, pathMidY, lastTargetRef.current.y],
         rotate: prefersReduced ? 0 : [0, 180, 360],
         transition: { duration: prefersReduced ? 0.01 : 1.6, ease: 'easeInOut' }
+      }).then(() => {
+        if (!prefersReduced) {
+          // Immediately merge on the first tile after launch
+          mascotControls.start({ scale: 0.001, opacity: 0, transition: { duration: 0.35 } })
+          setLandedIndex(0)
+          setTimeout(() => setLandedIndex(-1), 900)
+        }
       })
     }
 
@@ -440,22 +453,28 @@ export default function Features() {
     }
   }, [launched])
 
-  // Travel and merge pulse when active changes
+  // On active tile change: reform from tile, travel slightly, then merge and pulse
   useEffect(() => {
-    const go = async () => {
+    const animateSequence = async () => {
       if (!launched) return
       if (prefersReduced) {
-        mascotControls.set({ x: mascotPos.x, y: mascotPos.y })
+        mascotControls.set({ x: mascotPos.x, y: mascotPos.y, scale: 1, opacity: 1 })
         setLandedIndex(activeIndex)
         setTimeout(() => setLandedIndex(-1), 600)
         return
       }
+
+      // Reform as a sphere at previous merge point
+      await mascotControls.start({ scale: 1, opacity: 1, transition: { duration: 0.25 } })
+      // Travel with a slight arc and settle above target
       await mascotControls.start({ x: mascotPos.x, y: mascotPos.y - 28, transition: { type: 'spring', stiffness: 160, damping: 18 } })
       await mascotControls.start({ y: mascotPos.y, transition: { type: 'spring', stiffness: 210, damping: 16 } })
+      // Merge into tile: disappear and pulse
+      await mascotControls.start({ scale: 0.001, opacity: 0, transition: { duration: 0.35 } })
       setLandedIndex(activeIndex)
       setTimeout(() => setLandedIndex(-1), 900)
     }
-    go()
+    animateSequence()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mascotPos.x, mascotPos.y])
 
@@ -463,12 +482,12 @@ export default function Features() {
     <section ref={sectionRef} id="features" className="relative w-full bg-slate-950 py-24 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.08),transparent_50%)]" />
 
-      {/* AI Mascot Sphere (free-floating) */}
+      {/* AI Mascot Sphere (reforms, travels, merges) */}
       <motion.div
         aria-label="AI companion"
         className="pointer-events-none absolute z-30 hidden select-none md:block"
         animate={mascotControls}
-        initial={{ x: 26, y: 0 }}
+        initial={{ x: 26, y: 0, scale: 1, opacity: 1 }}
       >
         {/* Sphere core */}
         <motion.div
@@ -503,12 +522,13 @@ export default function Features() {
           <p className="mt-3 text-white/70">From brand customization to enterprise governance—launch once and operate everywhere.</p>
         </div>
 
-        {/* Masonry grid of tiles */}
-        <div ref={gridRef} className="[column-fill:_balance] columns-1 gap-6 sm:columns-2 lg:columns-3">
+        {/* Linear, alternating tiles: left then right */}
+        <div ref={listRef} className="flex flex-col gap-8">
           {items.map((item, idx) => (
-            <div key={item.title} className="mb-6 break-inside-avoid">
+            <div key={item.title} className={`w-full`}> 
               <FeatureTile
                 index={idx}
+                align={idx % 2 === 0 ? 'left' : 'right'}
                 focused={idx === activeIndex}
                 landed={idx === landedIndex}
                 onMountRef={(i, r) => setRefAtIndex(i, r)}
