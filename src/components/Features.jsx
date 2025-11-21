@@ -263,6 +263,7 @@ function RowAnimation({ type, focused }) {
 function FeatureTile({ icon: Icon, title, desc, type, index, focused, onMountRef, align = 'left' }) {
   const ref = useRef(null)
   const inView = useInView(ref, { margin: '-35% 0px -35% 0px' })
+  const prefersReduced = useReducedMotion()
 
   useEffect(() => {
     if (onMountRef) onMountRef(index, ref)
@@ -286,33 +287,77 @@ function FeatureTile({ icon: Icon, title, desc, type, index, focused, onMountRef
         backdropFilter: 'blur(14px)'
       }}
     >
-      {/* Golden energy pulse border when focused */}
+      {/* Golden energy border effects when focused (more prominent) */}
       {focused && (
         <>
-          {/* Base gold glow */}
+          {/* Strong outer glow */}
           <motion.div
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-3xl"
             style={{
-              boxShadow: '0 0 0 1px rgba(251,191,36,0.55), 0 0 24px rgba(251,191,36,0.35)'
+              boxShadow: '0 0 0 2px rgba(251,191,36,0.85), 0 0 30px rgba(251,191,36,0.55), 0 0 80px rgba(251,191,36,0.35)'
             }}
-            animate={{ opacity: [0.75, 0.35, 0.75] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+            animate={prefersReduced ? { opacity: 1 } : { opacity: [0.95, 0.6, 0.95] }}
+            transition={{ duration: 1.4, repeat: prefersReduced ? 0 : Infinity, ease: 'easeInOut' }}
           />
-          {/* Pulsating ring from orb contact point using CSS vars */}
+
+          {/* Animated golden sweep around the border */}
+          {!prefersReduced && (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-[-2px] rounded-[26px]"
+              style={{
+                background: 'conic-gradient(from 0deg, rgba(251,191,36,0.0), rgba(251,191,36,0.0) 20%, rgba(251,191,36,0.9) 35%, rgba(251,191,36,0.0) 50%, rgba(251,191,36,0.0) 100%)',
+                WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+                padding: '2px',
+                filter: 'blur(0.5px)'
+              }}
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: 'linear' }}
+            />
+          )}
+
+          {/* Inner stroke that softly breathes */}
           <motion.div
             aria-hidden
-            className="pointer-events-none absolute inset-[-2px] rounded-[26px]"
+            className="pointer-events-none absolute inset-1 rounded-[22px]"
+            style={{ border: '2px solid rgba(251,191,36,0.75)' }}
+            animate={prefersReduced ? { opacity: 0.9 } : { opacity: [0.9, 0.5, 0.9] }}
+            transition={{ duration: 1.2, repeat: prefersReduced ? 0 : Infinity, ease: 'easeInOut' }}
+          />
+
+          {/* Pulsating ring from orb contact point using CSS vars (stronger) */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-[-3px] rounded-[28px]"
             style={{
-              background: 'radial-gradient(120px 120px at var(--pulse-x,50%) var(--pulse-y,50%), rgba(251,191,36,0.65), rgba(251,191,36,0.15) 30%, transparent 60%)',
+              background: 'radial-gradient(140px 140px at var(--pulse-x,50%) var(--pulse-y,50%), rgba(255,215,128,0.9), rgba(251,191,36,0.55) 22%, rgba(251,191,36,0.15) 45%, transparent 65%)',
               WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
               WebkitMaskComposite: 'xor',
               maskComposite: 'exclude',
-              padding: '2px'
+              padding: '3px'
             }}
-            animate={{ opacity: [0.9, 0.25, 0.9], scale: [1, 1.02, 1] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            animate={prefersReduced ? { opacity: 0.8 } : { opacity: [1, 0.35, 1], scale: [1, 1.04, 1] }}
+            transition={{ duration: 1.6, repeat: prefersReduced ? 0 : Infinity, ease: 'easeInOut' }}
           />
+
+          {/* Expanding ring ripple from the contact point */}
+          {!prefersReduced && (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: 'radial-gradient(12px 12px at var(--pulse-x,50%) var(--pulse-y,50%), rgba(255,230,150,0.95), rgba(251,191,36,0.65) 40%, transparent 60%)'
+              }}
+              animate={{
+                backgroundSize: ['12px 12px', '420px 420px'],
+                opacity: [0.9, 0]
+              }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+            />
+          )}
         </>
       )}
 
