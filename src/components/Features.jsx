@@ -78,7 +78,6 @@ const items = [
 ]
 
 function RowAnimation({ type, focused }) {
-  // Futuristic mini-visuals using animated SVGs; intensity increases when focused
   const prefersReduced = useReducedMotion()
   const common = {
     initial: { opacity: 0, y: 12 },
@@ -327,7 +326,6 @@ export default function Features() {
   const [launched, setLaunched] = useState(false)
   const mascotControls = useAnimation()
   const prefersReduced = useReducedMotion()
-  const prevIndexRef = useRef(0)
   const lastTargetRef = useRef({ x: 0, y: 0 })
 
   const setRefAtIndex = (index, ref) => {
@@ -370,9 +368,8 @@ export default function Features() {
   // Compute mascot target to hover near the active tile center
   const updateMascotTarget = () => {
     const sec = sectionRef.current
-    const list = listRef.current
     const activeRef = tileRefs.current[activeIndex]?.current
-    if (!sec || !list || !activeRef) return
+    if (!sec || !activeRef) return
 
     const secRect = sec.getBoundingClientRect()
     const tileRect = activeRef.getBoundingClientRect()
@@ -404,7 +401,7 @@ export default function Features() {
     }
   }, [activeIndex])
 
-  // Launch from hero's Spline orb on first scroll into features
+  // Launch from hero's Spline orb as soon as features enter the viewport
   useEffect(() => {
     if (launched) return
     const src = document.getElementById('mascot-source')
@@ -418,7 +415,7 @@ export default function Features() {
 
     mascotControls.set({ x: startX, y: startY, scale: 1, opacity: 1 })
 
-    const handleFirstScroll = () => {
+    const handleLaunch = () => {
       setLaunched(true)
       updateMascotTarget()
       const pathMidX = (startX + lastTargetRef.current.x) / 2 + 80
@@ -427,33 +424,25 @@ export default function Features() {
         x: [startX, pathMidX, lastTargetRef.current.x],
         y: [startY, pathMidY, lastTargetRef.current.y],
         rotate: prefersReduced ? 0 : [0, 180, 360],
-        transition: { duration: prefersReduced ? 0.01 : 1.6, ease: 'easeInOut' }
-      }).then(() => {
-        if (!prefersReduced) {
-          // Immediately merge on the first tile after launch
-          mascotControls.start({ scale: 0.001, opacity: 0, transition: { duration: 0.35 } })
-          setLandedIndex(0)
-          setTimeout(() => setLandedIndex(-1), 900)
-        }
+        transition: { duration: prefersReduced ? 0.3 : 1.6, ease: 'easeInOut' }
       })
     }
 
     const obs = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
         if (e.isIntersecting && !launched) {
-          window.addEventListener('scroll', handleFirstScroll, { once: true })
+          handleLaunch()
         }
       })
-    }, { threshold: 0.2 })
+    }, { threshold: 0.15 })
 
     obs.observe(section)
     return () => {
-      window.removeEventListener('scroll', handleFirstScroll)
       obs.disconnect()
     }
   }, [launched])
 
-  // On active tile change: reform from tile, travel slightly, then merge and pulse
+  // On active tile change: reform, travel, then merge and pulse
   useEffect(() => {
     const animateSequence = async () => {
       if (!launched) return
@@ -464,13 +453,13 @@ export default function Features() {
         return
       }
 
-      // Reform as a sphere at previous merge point
-      await mascotControls.start({ scale: 1, opacity: 1, transition: { duration: 0.25 } })
+      // Reform as a sphere from previous merge point
+      await mascotControls.start({ scale: 1, opacity: 1, transition: { duration: 0.18 } })
       // Travel with a slight arc and settle above target
       await mascotControls.start({ x: mascotPos.x, y: mascotPos.y - 28, transition: { type: 'spring', stiffness: 160, damping: 18 } })
       await mascotControls.start({ y: mascotPos.y, transition: { type: 'spring', stiffness: 210, damping: 16 } })
       // Merge into tile: disappear and pulse
-      await mascotControls.start({ scale: 0.001, opacity: 0, transition: { duration: 0.35 } })
+      await mascotControls.start({ scale: 0.001, opacity: 0, transition: { duration: 0.3 } })
       setLandedIndex(activeIndex)
       setTimeout(() => setLandedIndex(-1), 900)
     }
@@ -485,7 +474,7 @@ export default function Features() {
       {/* AI Mascot Sphere (reforms, travels, merges) */}
       <motion.div
         aria-label="AI companion"
-        className="pointer-events-none absolute z-30 hidden select-none md:block"
+        className="pointer-events-none absolute z-30 hidden select-none md:block will-change-transform"
         animate={mascotControls}
         initial={{ x: 26, y: 0, scale: 1, opacity: 1 }}
       >
@@ -575,7 +564,6 @@ function ActiveSpotlight({ tileRefs, activeIndex }) {
 }
 
 function ClickHints() {
-  // periodic hint pings for primary CTAs
   const [show, setShow] = useState(false)
   useEffect(() => {
     const t = setInterval(() => setShow((s) => !s), 5000)
